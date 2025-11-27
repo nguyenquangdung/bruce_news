@@ -1,0 +1,12 @@
+-- BƯỚC 1: Thêm cột category mới
+ALTER TABLE public.news 
+ADD COLUMN category text;
+
+-- BƯỚC 2: Migrate dữ liệu cũ (ưu tiên lấy slug hoặc name, chuẩn hóa về lower case để sạch data lúc đầu)
+UPDATE public.news 
+SET category = lower(COALESCE(category_slug, category_name, 'general'));
+
+-- BƯỚC 3: Xóa các cột cũ
+ALTER TABLE public.news 
+DROP COLUMN category_name,
+DROP COLUMN category_slug;

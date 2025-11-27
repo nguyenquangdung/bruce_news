@@ -1,0 +1,3 @@
+-- Đổi tên cột content thành markdown_content trong bảng news
+ALTER TABLE public.news 
+RENAME COLUMN content TO markdown_content;

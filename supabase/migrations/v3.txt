@@ -1,0 +1,18 @@
+-- BƯỚC 1: Thêm cột slug vào bảng news
+alter table public.news 
+add column slug text;
+
+-- BƯỚC 2: Tạo slug cho các bài viết đã tồn tại (dựa trên title)
+-- Hàm tiện ích để tạo slug đơn giản (chuyển về thường, thay khoảng trắng bằng gạch ngang, bỏ ký tự đặc biệt)
+update public.news
+set slug = lower(regexp_replace(regexp_replace(title, '[^a-zA-Z0-9\s]', '', 'g'), '\s+', '-', 'g'));
+
+-- BƯỚC 3: Đặt ràng buộc Unique và Not Null sau khi đã có dữ liệu
+alter table public.news 
+alter column slug set not null;
+
+alter table public.news 
+add constraint news_slug_key unique (slug);
+
+-- BƯỚC 4: Index để tìm kiếm nhanh hơn theo slug
+create index idx_news_slug on public.news(slug);

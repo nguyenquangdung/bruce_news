@@ -1,0 +1,23 @@
+-- BƯỚC 1: Thêm cột category_name và category_slug vào bảng news
+ALTER TABLE public.news 
+ADD COLUMN category_name text,
+ADD COLUMN category_slug text;
+
+-- BƯỚC 2: Di chuyển dữ liệu từ bảng categories sang bảng news
+UPDATE public.news n
+SET 
+  category_name = c.name,
+  category_slug = c.slug
+FROM public.categories c
+WHERE n.category_id = c.id;
+
+-- BƯỚC 3: Điền giá trị mặc định cho các dòng chưa có category (nếu có)
+UPDATE public.news
+SET 
+  category_name = 'General', 
+  category_slug = 'general'
+WHERE category_name IS NULL;
+
+-- BƯỚC 4: Xóa cột category_id và xóa bảng categories
+ALTER TABLE public.news DROP COLUMN category_id;
+DROP TABLE public.categories;

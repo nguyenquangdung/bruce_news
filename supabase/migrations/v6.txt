@@ -1,0 +1,9 @@
+-- BƯỚC 1: Thêm cột tags (mảng text) và summary (text)
+ALTER TABLE public.news 
+ADD COLUMN tags text[] DEFAULT '{}',
+ADD COLUMN summary text;
+
+-- BƯỚC 2: (Tùy chọn) Cập nhật dữ liệu mẫu cho summary từ content cũ (lấy 150 ký tự đầu)
+UPDATE public.news 
+SET summary = substring(markdown_content from 1 for 150) || '...' 
+WHERE summary IS NULL;

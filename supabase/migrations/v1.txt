@@ -1,0 +1,35 @@
+-- BƯỚC 1: Tạo bảng 'news'
+create table public.news (
+  id uuid not null default gen_random_uuid (),
+  created_at timestamp with time zone not null default now(),
+  title text null,
+  source_name text null,
+  source_url text null,
+  date text null,
+  content text null,
+  constraint news_pkey primary key (id)
+);
+
+-- BƯỚC 2: Bật tính năng bảo mật Row Level Security (RLS)
+alter table public.news enable row level security;
+
+-- BƯỚC 3: Tạo quyền XEM (Read) cho tất cả mọi người (bao gồm khách vãng lai)
+create policy "Enable read access for all users"
+on public.news
+for select
+to public
+using (true);
+
+-- BƯỚC 4: Tạo quyền GHI (Insert/Update/Delete) chỉ dành cho Admin (user đã đăng nhập)
+create policy "Enable write access for authenticated users only"
+on public.news
+for all
+to authenticated
+using (true)
+with check (true);
+
+-- (Tùy chọn) Insert dữ liệu mẫu để test
+insert into public.news (title, source_name, source_url, date, content)
+values 
+('OpenAI Releases GPT-5 "Orion"', 'OpenAI Blog', 'https://openai.com', '2025-11-26', 'OpenAI has officially unveiled its latest frontier model...'),
+('Google DeepMind Solves Biology Challenge', 'DeepMind Research', 'https://deepmind.google', '2025-11-25', 'DeepMind''s AlphaFold 4 has successfully predicted...');

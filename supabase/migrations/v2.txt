@@ -1,0 +1,44 @@
+-- BƯỚC 1: Tạo bảng Categories (Chuyên mục)
+create table public.categories (
+  id uuid not null default gen_random_uuid (),
+  created_at timestamp with time zone not null default now(),
+  name text not null,
+  slug text not null,
+  constraint categories_pkey primary key (id)
+);
+
+-- Bật RLS cho categories
+alter table public.categories enable row level security;
+
+-- Cho phép ai cũng xem được categories
+create policy "Enable read access for all users"
+on public.categories for select to public using (true);
+
+-- Insert dữ liệu mẫu cho categories
+insert into public.categories (name, slug) values
+('Technology', 'technology'),
+('Research', 'research'),
+('Business', 'business'),
+('Policy & Ethics', 'ethics');
+
+-- BƯỚC 2: Cập nhật bảng News
+-- Thêm cột category_id liên kết với bảng categories
+alter table public.news 
+add column category_id uuid references public.categories(id);
+
+-- Thêm cột link ảnh đại diện
+alter table public.news 
+add column image_url text;
+
+-- Thêm cột đếm lượt xem (mặc định là 0)
+alter table public.news 
+add column views integer default 0;
+
+-- (Tùy chọn) Update dữ liệu cũ để có category mặc định (lấy category đầu tiên)
+do $$
+declare
+  cat_id uuid;
+begin
+  select id into cat_id from public.categories limit 1;
+  update public.news set category_id = cat_id where category_id is null;
+end $$;
