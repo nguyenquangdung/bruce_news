@@ -13,6 +13,7 @@ interface EditNewsModalProps {
 export const EditNewsModal: React.FC<EditNewsModalProps> = ({ isOpen, onClose, onSave, item }) => {
   const [formData, setFormData] = useState<Partial<NewsItem>>({});
   const [tagsInput, setTagsInput] = useState('');
+  const [sourcesInput, setSourcesInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export const EditNewsModal: React.FC<EditNewsModalProps> = ({ isOpen, onClose, o
       if (item) {
         setFormData({ ...item });
         setTagsInput(item.tags ? item.tags.join(', ') : '');
+        setSourcesInput(item.sources ? item.sources.join('\n') : (item.sourceUrl || ''));
       } else {
         // Reset for "Create New"
         setFormData({
@@ -27,6 +29,7 @@ export const EditNewsModal: React.FC<EditNewsModalProps> = ({ isOpen, onClose, o
           date: new Date().toISOString().split('T')[0],
           sourceName: '',
           sourceUrl: '',
+          sources: [],
           markdownContent: '',
           summary: '',
           tags: [],
@@ -35,6 +38,7 @@ export const EditNewsModal: React.FC<EditNewsModalProps> = ({ isOpen, onClose, o
           views: 0
         });
         setTagsInput('');
+        setSourcesInput('');
       }
     }
   }, [isOpen, item]);
@@ -51,9 +55,20 @@ export const EditNewsModal: React.FC<EditNewsModalProps> = ({ isOpen, onClose, o
       .map(t => t.trim())
       .filter(t => t.length > 0);
 
+    // Process sources
+    const processedSources = sourcesInput
+        .split('\n')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+    // Sync primary sourceUrl with first item in sources list for backward compatibility
+    const primarySource = processedSources.length > 0 ? processedSources[0] : formData.sourceUrl;
+
     await onSave({
       ...formData,
-      tags: processedTags
+      tags: processedTags,
+      sources: processedSources,
+      sourceUrl: primarySource
     });
     
     setIsSaving(false);
@@ -141,27 +156,28 @@ export const EditNewsModal: React.FC<EditNewsModalProps> = ({ isOpen, onClose, o
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Source Name</label>
-                <input 
-                  type="text" 
-                  required
-                  value={formData.sourceName || ''}
-                  onChange={e => handleChange('sourceName', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Source URL</label>
-                <input 
-                  type="url" 
-                  required
-                  value={formData.sourceUrl || ''}
-                  onChange={e => handleChange('sourceUrl', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Source Name</label>
+              <input 
+                type="text" 
+                required
+                value={formData.sourceName || ''}
+                onChange={e => handleChange('sourceName', e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+
+            {/* Source URLs Input */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Source URLs (One per line)</label>
+              <p className="text-xs text-gray-500 mb-1">Used to add citations at the end of each section.</p>
+              <textarea
+                rows={3}
+                value={sourcesInput}
+                onChange={(e) => setSourcesInput(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black font-mono text-xs"
+                placeholder="https://source1.com&#10;https://source2.com"
+              />
             </div>
 
             {/* Summary Input */}
@@ -189,7 +205,7 @@ export const EditNewsModal: React.FC<EditNewsModalProps> = ({ isOpen, onClose, o
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Markdown Content</label>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Markdown Content (Split sections with ## Heading)</label>
               <textarea 
                 required
                 rows={8}

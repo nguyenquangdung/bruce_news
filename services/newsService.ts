@@ -19,6 +19,7 @@ const mapDbItemToNewsItem = (item: any): NewsItem => ({
   slug: item.slug,
   sourceName: item.source_name,
   sourceUrl: item.source_url,
+  sources: item.sources || [], // Map new column
   date: item.date,
   markdownContent: item.markdown_content, 
   summary: item.summary,
@@ -35,10 +36,14 @@ export const NewsService = {
    */
   getAllNews: async (limit?: number): Promise<NewsItem[]> => {
     // Select all columns
+    // Sort logic: 
+    // 1. Date descending (newest printed date first). nullsFirst: false ensures items WITH dates appear at top.
+    // 2. Created_at descending (newest database entry first) to break ties.
     let query = supabase
       .from('news')
       .select('*')
-      .order('date', { ascending: false });
+      .order('date', { ascending: false, nullsFirst: false }) 
+      .order('created_at', { ascending: false });
 
     // Apply limit if provided
     if (limit) {
@@ -66,7 +71,8 @@ export const NewsService = {
     let query = supabase
       .from('news')
       .select('*')
-      .order('date', { ascending: false });
+      .order('date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
 
     // If category is NOT 'ai', filter strictly.
     // If category IS 'ai', we return everything because the user stated "all articles are about AI".
@@ -106,6 +112,27 @@ export const NewsService = {
   },
 
   /**
+   * Search news by title or summary
+   */
+  searchNews: async (queryStr: string): Promise<NewsItem[]> => {
+    if (!queryStr.trim()) return [];
+
+    const { data, error } = await supabase
+      .from('news')
+      .select('*')
+      .or(`title.ilike.%${queryStr}%,summary.ilike.%${queryStr}%`)
+      .order('date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error searching news:', error);
+      throw error;
+    }
+
+    return (data || []).map(mapDbItemToNewsItem);
+  },
+
+  /**
    * Fetch all available categories (Static list)
    */
   getCategories: async (): Promise<string[]> => {
@@ -122,6 +149,7 @@ export const NewsService = {
       slug: createSlug(updatedItem.title), // Auto-regenerate slug on title change
       source_name: updatedItem.sourceName,
       source_url: updatedItem.sourceUrl,
+      sources: updatedItem.sources, // Update source array
       markdown_content: updatedItem.markdownContent,
       summary: updatedItem.summary,
       tags: updatedItem.tags,
@@ -160,6 +188,7 @@ export const NewsService = {
       slug: newItem.title ? createSlug(newItem.title) : `news-${Date.now()}`,
       source_name: newItem.sourceName,
       source_url: newItem.sourceUrl,
+      sources: newItem.sources,
       date: newItem.date,
       markdown_content: newItem.markdownContent,
       summary: newItem.summary,
@@ -173,5 +202,20 @@ export const NewsService = {
       .insert([dbPayload]);
       
     if (error) throw error;
+  },
+
+  /**
+   * Delete news item
+   */
+  deleteNews: async (id: string): Promise<void> => {
+    const { error } = await supabase
+      .from('news')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting news:', error);
+      throw error;
+    }
   }
 };

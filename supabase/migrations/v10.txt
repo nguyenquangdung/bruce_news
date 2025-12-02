@@ -1,0 +1,8 @@
+-- BƯỚC 1: Thêm cột sources (mảng text) vào bảng news
+ALTER TABLE public.news 
+ADD COLUMN sources text[] DEFAULT '{}';
+
+-- BƯỚC 2: Migrate dữ liệu cũ (chuyển source_url đơn lẻ vào mảng sources nếu có)
+UPDATE public.news 
+SET sources = ARRAY[source_url]
+WHERE source_url IS NOT NULL AND sources = '{}';

@@ -4,7 +4,7 @@ import { AuthService } from '../services/authService';
 import { NewsService } from '../services/newsService';
 import { NewsItem } from '../types';
 import { EditNewsModal } from '../components/EditNewsModal';
-import { LogOut, Edit2, RefreshCw, Eye, Image as ImageIcon, Plus } from 'lucide-react';
+import { LogOut, Edit2, RefreshCw, Eye, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
 import { formatCategoryName } from '../constants';
 
 export const AdminDashboard: React.FC = () => {
@@ -52,6 +52,18 @@ export const AdminDashboard: React.FC = () => {
   const openEditModal = (item: NewsItem) => {
     setEditingItem(item);
     setIsModalOpen(true);
+  };
+
+  const handleDelete = async (item: NewsItem) => {
+    if (window.confirm(`Are you sure you want to delete "${item.title}"? This cannot be undone.`)) {
+        try {
+            await NewsService.deleteNews(item.id);
+            setNews(prev => prev.filter(n => n.id !== item.id));
+        } catch (error) {
+            console.error("Failed to delete", error);
+            alert("Failed to delete article.");
+        }
+    }
   };
 
   const handleSave = async (item: Partial<NewsItem>) => {
@@ -169,12 +181,21 @@ export const AdminDashboard: React.FC = () => {
                                          </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right align-top">
-                                        <button 
-                                            onClick={() => openEditModal(item)}
-                                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 rounded text-gray-700 hover:border-black hover:text-black text-xs font-bold transition-all shadow-sm"
-                                        >
-                                            <Edit2 className="w-3 h-3" /> Edit
-                                        </button>
+                                        <div className="flex justify-end gap-2">
+                                            <button 
+                                                onClick={() => openEditModal(item)}
+                                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 rounded text-gray-700 hover:border-black hover:text-black text-xs font-bold transition-all shadow-sm"
+                                            >
+                                                <Edit2 className="w-3 h-3" /> Edit
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(item)}
+                                                className="inline-flex items-center justify-center w-8 h-8 bg-white border border-gray-200 rounded text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"
+                                                title="Delete Article"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

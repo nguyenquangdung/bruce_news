@@ -1,0 +1,8 @@
+-- BƯỚC 1: Tạo index cho cột category để lọc nhanh hơn
+CREATE INDEX IF NOT EXISTS idx_news_category ON public.news(category);
+
+-- BƯỚC 2: Tạo index cho cột title để tìm kiếm (ilike) nhanh hơn
+CREATE INDEX IF NOT EXISTS idx_news_title ON public.news(title);
+
+-- BƯỚC 3: Tạo index cho cột slug để truy vấn chi tiết bài viết nhanh hơn
+CREATE INDEX IF NOT EXISTS idx_news_slug_lookup ON public.news(slug);

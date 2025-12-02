@@ -1,0 +1,3 @@
+-- BƯỚC 1: Thêm cột source_url để lưu link nguồn bài viết
+ALTER TABLE public.news 
+ADD COLUMN IF NOT EXISTS source_url text;

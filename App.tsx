@@ -6,6 +6,7 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { NewsDetailPage } from './pages/NewsDetailPage';
 import { AllNewsPage } from './pages/AllNewsPage';
 import { CategoryPage } from './pages/CategoryPage';
+import { SearchPage } from './pages/SearchPage';
 
 const App: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/all-news" element={<AllNewsPage />} />
+        <Route path="/search" element={<SearchPage />} />
         
         {/* Section Route for Navigation Links */}
         <Route path="/section/:category" element={<CategoryPage />} />

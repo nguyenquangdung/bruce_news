@@ -8,7 +8,8 @@ export interface NewsItem {
   title: string;
   slug: string; // URL safe string
   sourceName: string;
-  sourceUrl: string;
+  sourceUrl?: string | null; // Keep for backward compatibility or primary source
+  sources?: string[]; // New field: Array of source links
   date: string;
   markdownContent: string;
   
