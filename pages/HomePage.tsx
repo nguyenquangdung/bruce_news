@@ -3,8 +3,7 @@ import { NewsService } from '../services/newsService';
 import { NewsItem } from '../types';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
-import { NewsCard } from '../components/NewsCard';
-import { Loader2, ArrowRight } from 'lucide-react';
+import { Share2, Bookmark, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const HomePage: React.FC = () => {
@@ -14,8 +13,7 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        // Fetch only the latest 10 news items for the homepage
-        const data = await NewsService.getAllNews(10);
+        const data = await NewsService.getAllNews(12);
         setNews(data);
       } catch (error) {
         console.error("Failed to load news", error);
@@ -28,86 +26,188 @@ export const HomePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f9f9f9]">
-        <Loader2 className="w-10 h-10 animate-spin text-gray-400" />
-        <p className="mt-4 font-serif text-gray-500 italic">Printing today's edition...</p>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-8 h-8 animate-spin text-news-gray" />
       </div>
     );
   }
 
-  // Layout Logic: First item is Hero, rest are sidebar items
-  const heroNews = news.length > 0 ? news[0] : null;
-  const standardNews = news.length > 1 ? news.slice(1) : [];
+  // --- CONTENT MAPPING STRATEGY (2 Column Layout) ---
+  
+  // Main Column: Hero (Index 0)
+  const heroNews = news[0];
+  
+  // Main Column: Sub-stories (Grid below hero) - Take 3 items
+  const subHeroNews = news.slice(1, 4);
+  
+  // Right Column: Sidebar (Index 4+)
+  // We prioritize keeping the 'Feature' feel for the top of sidebar
+  const featureRight = news[4];
+  const smallRight = news.slice(5, 10); // Take rest
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f9f9f9]">
+    <div className="min-h-screen bg-white text-news-black font-sans">
       <Header />
       
-      <main className="container mx-auto px-4 flex-grow max-w-7xl">
-        {/* Newspaper Grid Layout: Big Left (8) vs List Right (4) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+      <main className="container mx-auto max-w-[1200px] px-4 py-8">
+        
+        {/* MAIN LAYOUT: Desktop 2 cols (Main 75% - Sidebar 25%) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 divide-y lg:divide-y-0 lg:divide-x divide-gray-200">
           
-          {/* LEFT COLUMN: HERO STORY */}
-          <div className="lg:col-span-8">
-            {heroNews ? (
-              <section className="h-full">
-                <NewsCard item={heroNews} isHero={true} />
-              </section>
-            ) : (
-                <div className="text-center py-20">
-                    <h2 className="font-serif text-2xl text-gray-500">No headlines to report today.</h2>
-                </div>
-            )}
+          {/* =========================================
+              COLUMN 1: MAIN CONTENT (Hero + Sub-grid)
+              lg:col-span-9
+             ========================================= */}
+          <div className="lg:col-span-9 pr-0 lg:pr-6">
+             
+             {heroNews ? (
+                <section>
+                    {/* Hero Title */}
+                    <Link to={`/${heroNews.category}/${heroNews.slug}`} className="group block mb-5">
+                        <h2 className="font-serif-headline text-3xl md:text-5xl lg:text-6xl font-black leading-tight text-center md:text-left group-hover:opacity-80">
+                            {heroNews.title}
+                        </h2>
+                    </Link>
+
+                    {/* Hero Image Area */}
+                    <div className="relative mb-8 group cursor-pointer">
+                         <div className="aspect-[16/9] bg-gray-200 w-full relative overflow-hidden">
+                            {heroNews.imageUrl ? (
+                                <img src={heroNews.imageUrl} alt={heroNews.title} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-500 font-serif-headline italic">
+                                    No Image Available
+                                </div>
+                            )}
+                            
+                            {/* Caption Overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 pt-20">
+                                <p className="text-white text-sm font-sans opacity-95 font-medium max-w-3xl">
+                                    <span className="font-bold text-gray-300 uppercase text-xs mr-2">{heroNews.sourceName}:</span>
+                                    {heroNews.summary}
+                                </p>
+                            </div>
+                         </div>
+
+                         {/* Floating Actions Sidebar (Fake) */}
+                         <div className="absolute top-4 right-4 flex flex-col gap-2">
+                             <div className="w-9 h-9 bg-white rounded-full shadow-md flex items-center justify-center text-news-black hover:bg-gray-100 cursor-pointer border border-gray-200">
+                                 <Share2 className="w-4 h-4" />
+                             </div>
+                             <div className="w-9 h-9 bg-white rounded-full shadow-md flex items-center justify-center text-news-black hover:bg-gray-100 cursor-pointer border border-gray-200">
+                                 <Bookmark className="w-4 h-4" />
+                             </div>
+                         </div>
+                    </div>
+
+                    {/* Three Related Articles Below Hero (Grid) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-gray-200 pt-6">
+                        {subHeroNews.map(item => (
+                             <div key={item.id} className="group flex flex-col h-full">
+                                <Link to={`/${item.category}/${item.slug}`} className="flex-grow">
+                                    {/* Optional small thumb for sub-items if available */}
+                                    {item.imageUrl && (
+                                        <div className="aspect-[3/2] mb-3 overflow-hidden bg-gray-100 hidden md:block">
+                                            <img src={item.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                                        </div>
+                                    )}
+                                    <div className="text-[10px] font-bold text-accent-red uppercase tracking-wider mb-2">
+                                        {item.category}
+                                    </div>
+                                    <h3 className="font-serif-headline font-bold text-xl leading-snug mb-3 group-hover:underline underline-offset-4 decoration-2">
+                                        {item.title}
+                                    </h3>
+                                    <p className="text-sm text-news-gray leading-relaxed line-clamp-3 mb-3">
+                                        {item.summary || item.markdownContent.slice(0, 80)}...
+                                    </p>
+                                </Link>
+                                <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-auto">
+                                    <span>{item.date}</span>
+                                    <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                    <span>3 min read</span>
+                                </div>
+                             </div>
+                        ))}
+                    </div>
+                </section>
+             ) : (
+                 <div className="text-center py-20 font-serif-headline italic text-gray-400">Loading top stories...</div>
+             )}
           </div>
 
-          {/* RIGHT COLUMN: RECENT STORIES LIST */}
-          <div className="lg:col-span-4 flex flex-col h-full border-t lg:border-t-0 lg:border-l border-black pt-8 lg:pt-0 lg:pl-10">
-             
-             {/* Section Label */}
-             <h3 className="font-sans font-bold text-xs uppercase tracking-widest text-red-700 mb-6 border-b border-gray-200 pb-2">
-                  Latest Updates
-             </h3>
 
-             {/* Vertical List */}
-             <div className="flex flex-col divide-y divide-gray-200">
-                {standardNews.map((item) => (
-                    <div key={item.id} className="py-6 first:pt-0">
-                        <NewsCard item={item} />
+          {/* =========================================
+              COLUMN 2: SIDEBAR (Right)
+              lg:col-span-3
+             ========================================= */}
+          <div className="lg:col-span-3 pt-8 lg:pt-0 pl-0 lg:pl-6">
+             
+             {/* Sidebar Header */}
+             <div className="mb-6 flex items-center justify-between">
+                 <h4 className="font-sans font-bold text-xs uppercase tracking-widest text-gray-900 border-b border-black pb-1">
+                     Trending & Features
+                 </h4>
+             </div>
+
+             {/* Feature Card */}
+             {featureRight && (
+                <div className="mb-8 group cursor-pointer">
+                    <div className="aspect-[3/2] bg-gray-100 mb-3 overflow-hidden">
+                        {featureRight.imageUrl ? (
+                            <img src={featureRight.imageUrl} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        ) : (
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-400">Feature Image</div>
+                        )}
+                    </div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {featureRight.category} Feature
+                    </div>
+                    <Link to={`/${featureRight.category}/${featureRight.slug}`}>
+                        <h3 className="font-serif-headline font-bold text-lg leading-tight mb-2 group-hover:text-gray-600">
+                            {featureRight.title}
+                        </h3>
+                        <p className="text-sm text-news-gray leading-relaxed mb-2 line-clamp-3">
+                            {featureRight.summary || "Read more about this trending topic..."}
+                        </p>
+                    </Link>
+                </div>
+             )}
+
+             {/* Vertical List of Small Cards */}
+             <div className="flex flex-col gap-6 mb-6">
+                {smallRight.map((item, idx) => (
+                    <div key={item.id} className="group border-t border-gray-100 pt-4 first:border-0 first:pt-0">
+                        <Link to={`/${item.category}/${item.slug}`} className="flex gap-3 items-start">
+                             <div className="w-16 h-16 bg-gray-100 flex-shrink-0">
+                                 {item.imageUrl && <img src={item.imageUrl} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"/>}
+                             </div>
+                             <div>
+                                <h4 className="font-serif-headline font-bold text-sm leading-snug mb-1 group-hover:text-accent-red line-clamp-3">
+                                    {item.title}
+                                </h4>
+                                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">
+                                    {item.sourceName}
+                                </span>
+                             </div>
+                        </Link>
                     </div>
                 ))}
-                
-                {standardNews.length === 0 && (
-                    <p className="text-sm text-gray-400 italic">More news coming soon.</p>
-                )}
              </div>
 
-             {/* See More Button */}
-             <div className="mt-8 pt-6 border-t border-gray-200">
-                <Link to="/all-news" className="group flex items-center justify-between font-serif font-bold text-lg hover:text-red-700 transition-colors">
-                    <span>See All News</span>
-                    <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
-                </Link>
+             {/* Slider Controls (Fake) */}
+             <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-gray-200">
+                <button className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <ChevronLeft className="w-4 h-4 text-gray-600" />
+                </button>
+                <span className="text-[10px] font-bold text-gray-400">PAGE 1 / 4</span>
+                <button className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                </button>
              </div>
 
           </div>
-        </div>
 
-        {/* About Section - Moved to bottom */}
-        <section className="mt-20 border-t-4 border-black pt-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                <div>
-                    <h2 className="font-serif text-3xl font-bold mb-4">About BruceNews</h2>
-                    <p className="font-serif text-lg text-gray-600 leading-relaxed">
-                        The premier destination for AI journalism. Delivering raw signals from the frontier of technology. We are dedicated to providing clarity in the age of intelligence, cutting through the noise to bring you the stories that matter.
-                    </p>
-                </div>
-                <div className="bg-gray-100 p-6 rounded-sm border border-gray-200">
-                   <p className="font-sans text-sm text-gray-600">
-                     <strong>Editor's Note:</strong> All news is published immediately for transparency. Our mission is to democratize access to information about Artificial Intelligence and its impact on society.
-                   </p>
-                </div>
-             </div>
-        </section>
+        </div>
 
       </main>
 
