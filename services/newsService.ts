@@ -12,6 +12,22 @@ const createSlug = (text: string): string => {
     .replace(/^-+|-+$/g, ''); // Trim -
 };
 
+// Helper mapping function to ensure consistency
+const mapDbItemToNewsItem = (item: any): NewsItem => ({
+  id: item.id,
+  title: item.title,
+  slug: item.slug,
+  sourceName: item.source_name,
+  sourceUrl: item.source_url,
+  date: item.date,
+  markdownContent: item.markdown_content, 
+  summary: item.summary,
+  tags: item.tags || [],
+  imageUrl: item.image_url,
+  views: item.views || 0,
+  category: item.category || 'general',
+});
+
 export const NewsService = {
   /**
    * Fetch all news items from Supabase
@@ -39,20 +55,36 @@ export const NewsService = {
     if (!data) return [];
 
     // Map Supabase result to App Type
-    return data.map((item: any) => ({
-      id: item.id,
-      title: item.title,
-      slug: item.slug,
-      sourceName: item.source_name,
-      sourceUrl: item.source_url,
-      date: item.date,
-      markdownContent: item.markdown_content, 
-      summary: item.summary,
-      tags: item.tags || [],
-      imageUrl: item.image_url,
-      views: item.views || 0,
-      category: item.category || 'general',
-    }));
+    return data.map(mapDbItemToNewsItem);
+  },
+
+  /**
+   * Fetch news filtered by category
+   * Special case: 'ai' category returns ALL news as per requirements.
+   */
+  getNewsByCategory: async (category: string): Promise<NewsItem[]> => {
+    let query = supabase
+      .from('news')
+      .select('*')
+      .order('date', { ascending: false });
+
+    // If category is NOT 'ai', filter strictly.
+    // If category IS 'ai', we return everything because the user stated "all articles are about AI".
+    if (category.toLowerCase() !== 'ai') {
+       // Use ilike for case-insensitive matching
+       query = query.ilike('category', category); 
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching news by category:', error);
+      throw error;
+    }
+
+    if (!data) return [];
+
+    return data.map(mapDbItemToNewsItem);
   },
 
   /**
@@ -70,20 +102,7 @@ export const NewsService = {
       return null;
     }
 
-    return {
-      id: data.id,
-      title: data.title,
-      slug: data.slug,
-      sourceName: data.source_name,
-      sourceUrl: data.source_url,
-      date: data.date,
-      markdownContent: data.markdown_content, 
-      summary: data.summary,
-      tags: data.tags || [],
-      imageUrl: data.image_url,
-      views: data.views || 0,
-      category: data.category || 'general',
-    };
+    return mapDbItemToNewsItem(data);
   },
 
   /**

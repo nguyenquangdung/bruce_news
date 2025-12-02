@@ -1,11 +1,32 @@
 import { NewsItem, CategoryOption } from './types';
 
-// Helper function to convert "machine-learning" or "TECHNOLOGY" -> "Machine Learning" / "Technology"
+// Mapping for special spellings (accents) and acronyms
+const CATEGORY_DISPLAY_MAP: Record<string, string> = {
+  'ai': 'AI',
+  'chung-khoan': 'Chứng khoán',
+  'crypto': 'Crypto',
+  'us': 'US',
+  'vietnam': 'Vietnam',
+  'technology': 'Technology',
+  'research': 'Research',
+  'business': 'Business',
+  'policy-ethics': 'Policy & Ethics',
+  'world': 'World',
+  'machine-learning': 'Machine Learning',
+};
+
+// Helper function to convert slug to display name
 export const formatCategoryName = (input: string | undefined): string => {
   if (!input) return 'General';
-  // 1. Replace hyphens/underscores with spaces
-  // 2. Split into words
-  // 3. Capitalize first letter of each word, lower case the rest
+  
+  const normalizedSlug = input.toLowerCase().trim();
+
+  // 1. Check dictionary for specific spellings (handles accents and acronyms)
+  if (CATEGORY_DISPLAY_MAP[normalizedSlug]) {
+    return CATEGORY_DISPLAY_MAP[normalizedSlug];
+  }
+
+  // 2. Fallback: Replace hyphens/underscores with spaces & Title Case
   return input
     .replace(/[-_]/g, ' ')
     .trim()

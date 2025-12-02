@@ -1,9 +1,13 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, Search } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const location = useLocation();
+
+  // Helper to check active state
+  const isActive = (path: string) => location.pathname.includes(path);
 
   return (
     <header className="flex flex-col font-sans">
@@ -23,10 +27,8 @@ export const Header: React.FC = () => {
             brucenews.com
           </div>
 
-          {/* Right: Ticker & Actions */}
+          {/* Right: Actions */}
           <div className="flex items-center gap-3 md:gap-4">
-            <span className="hidden sm:inline">AI Index <span className="text-accent-green font-bold">+0.67%</span></span>
-            
             <button className="bg-[#1a3c5e] text-white px-3 py-1 rounded-[3px] font-bold hover:bg-blue-900 transition-colors uppercase text-[9px] tracking-wider">
               Subscribe
             </button>
@@ -58,11 +60,36 @@ export const Header: React.FC = () => {
 
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-8 text-[13px] font-bold text-news-black font-sans">
-              <a href="#" className="border-b-2 border-black pb-0.5">AI</a>
-              <a href="#" className="text-gray-600 hover:text-black hover:underline underline-offset-4 decoration-2">Chứng khoán</a>
-              <a href="#" className="text-gray-600 hover:text-black hover:underline underline-offset-4 decoration-2">Crypto</a>
-              <a href="#" className="text-gray-600 hover:text-black hover:underline underline-offset-4 decoration-2">US</a>
-              <a href="#" className="text-gray-600 hover:text-black hover:underline underline-offset-4 decoration-2">Vietnam</a>
+              <Link 
+                to="/section/ai" 
+                className={`${isActive('/section/ai') ? 'border-b-2 border-black pb-0.5' : 'text-gray-600 hover:text-black hover:underline underline-offset-4 decoration-2'}`}
+              >
+                AI
+              </Link>
+              <Link 
+                to="/section/chung-khoan" 
+                className={`${isActive('/section/chung-khoan') ? 'border-b-2 border-black pb-0.5' : 'text-gray-600 hover:text-black hover:underline underline-offset-4 decoration-2'}`}
+              >
+                Chứng khoán
+              </Link>
+              <Link 
+                to="/section/crypto" 
+                className={`${isActive('/section/crypto') ? 'border-b-2 border-black pb-0.5' : 'text-gray-600 hover:text-black hover:underline underline-offset-4 decoration-2'}`}
+              >
+                Crypto
+              </Link>
+              <Link 
+                to="/section/us" 
+                className={`${isActive('/section/us') ? 'border-b-2 border-black pb-0.5' : 'text-gray-600 hover:text-black hover:underline underline-offset-4 decoration-2'}`}
+              >
+                US
+              </Link>
+              <Link 
+                to="/section/vietnam" 
+                className={`${isActive('/section/vietnam') ? 'border-b-2 border-black pb-0.5' : 'text-gray-600 hover:text-black hover:underline underline-offset-4 decoration-2'}`}
+              >
+                Vietnam
+              </Link>
             </nav>
 
              {/* Search Icon (Mobile placeholder) */}
@@ -70,18 +97,6 @@ export const Header: React.FC = () => {
                <Search className="w-4 h-4" />
              </button>
           </div>
-        </div>
-      </div>
-
-      {/* 4. Breaking / Live Bar */}
-      <div className="border-b border-gray-200 bg-white">
-        <div className="container mx-auto max-w-[1200px] px-4 py-2.5 flex items-center gap-3 text-xs md:text-[13px]">
-          <span className="text-accent-red font-bold tracking-wider border border-accent-red px-1.5 py-px text-[10px]">
-            LIVE
-          </span>
-          <span className="font-serif-headline font-bold text-news-black truncate">
-            AI regulation bill advances in the U.S. Senate.
-          </span>
         </div>
       </div>
     </header>

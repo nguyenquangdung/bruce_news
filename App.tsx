@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { NewsDetailPage } from './pages/NewsDetailPage';
 import { AllNewsPage } from './pages/AllNewsPage';
+import { CategoryPage } from './pages/CategoryPage';
 
 const App: React.FC = () => {
   return (
@@ -12,6 +13,10 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/all-news" element={<AllNewsPage />} />
+        
+        {/* Section Route for Navigation Links */}
+        <Route path="/section/:category" element={<CategoryPage />} />
+
         {/* Dynamic Route for News Detail: category/slug */}
         <Route path="/:category/:slug" element={<NewsDetailPage />} />
         
