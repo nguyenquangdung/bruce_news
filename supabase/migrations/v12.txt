@@ -1,0 +1,5 @@
+-- Add author fields to news table
+ALTER TABLE public.news
+ADD COLUMN IF NOT EXISTS author_name text DEFAULT 'Bruce News Automation',
+ADD COLUMN IF NOT EXISTS author_role text DEFAULT 'AI Engine',
+ADD COLUMN IF NOT EXISTS author_avatar text;

@@ -4,9 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bruce News - AI Journalism</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -17,9 +18,24 @@
               'news-black': '#111111',
               'news-gray': '#666666',
               'news-border': '#e2e2e2',
-              'accent-red': '#C00000',
-              'accent-green': '#008000',
-            }
+              'primary': '#2563eb', // Blue 600
+              'primary-dark': '#1d4ed8', // Blue 700
+              'accent': '#f59e0b', // Amber 500
+              'accent-light': '#fffbeb', // Amber 50
+            },
+            typography: (theme) => ({
+              DEFAULT: {
+                css: {
+                  color: '#334155',
+                  a: {
+                    color: '#2563eb',
+                    '&:hover': {
+                      color: '#1d4ed8',
+                    },
+                  },
+                },
+              },
+            }),
           }
         }
       }
@@ -32,6 +48,10 @@
       }
       .font-serif-headline {
         font-family: Georgia, "Times New Roman", Times, serif;
+      }
+      /* Smooth scroll behavior */
+      html {
+        scroll-behavior: smooth;
       }
     </style>
   <script type="importmap">
@@ -46,7 +66,8 @@
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
     "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.86.0",
     "react-markdown": "https://aistudiocdn.com/react-markdown@^10.1.0",
-    "remark-gfm": "https://aistudiocdn.com/remark-gfm@^4.0.1"
+    "remark-gfm": "https://aistudiocdn.com/remark-gfm@^4.0.1",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^12.4.7"
   }
 }
 </script>
