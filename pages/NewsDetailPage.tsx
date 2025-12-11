@@ -9,11 +9,18 @@ import { formatCategoryName } from '../constants';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+// --- HELPER ---
+const cleanHeading = (text: string | undefined): string | undefined => {
+  if (!text) return undefined;
+  // Removes pattern like {#abc-xyz} at the end of string
+  return text.replace(/\s*\{#.*\}\s*$/, '').trim();
+};
+
 // --- SUB-COMPONENTS ---
 
 const ArticleHeader: React.FC<{ news: NewsItem; readTime: number }> = ({ news, readTime }) => (
   <div className="mb-12 text-center max-w-4xl mx-auto">
-    <div className="flex items-center justify-center gap-3 text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-6">
+    <div className="flex items-center justify-center gap-3 text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-6 font-sans">
       <Link to={`/section/${news.category}`} className="text-red-700 hover:underline">
         {formatCategoryName(news.category)}
       </Link>
@@ -28,7 +35,7 @@ const ArticleHeader: React.FC<{ news: NewsItem; readTime: number }> = ({ news, r
     </h1>
 
     {news.summary && (
-      <p className="text-xl md:text-2xl text-slate-600 leading-relaxed font-serif antialiased max-w-2xl mx-auto">
+      <p className="text-xl md:text-2xl text-slate-600 leading-relaxed font-serif antialiased max-w-2xl mx-auto italic border-l-4 border-gray-200 pl-6 text-left">
         {news.summary}
       </p>
     )}
@@ -39,7 +46,7 @@ const ArticleImage: React.FC<{ imageUrl?: string; caption?: string; sourceName?:
   if (!imageUrl) return null;
   return (
     <figure className="mb-16 max-w-[1200px] mx-auto">
-      <div className="w-full aspect-[21/9] md:aspect-[2/1] bg-slate-100 overflow-hidden rounded-sm">
+      <div className="w-full aspect-[21/9] md:aspect-[2/1] bg-slate-100 overflow-hidden rounded-sm shadow-sm">
         <img
           src={imageUrl}
           alt={caption || 'Article Hero'}
@@ -59,15 +66,15 @@ const TableOfContents: React.FC<{ sections: { id: string; title: string }[] }> =
   if (sections.length === 0) return null;
 
   return (
-    <div className="max-w-3xl mx-auto mb-16 border-t border-b border-slate-200 py-8">
-      <span className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-4">Contents</span>
-      <ul className="flex flex-col md:flex-row md:flex-wrap gap-x-8 gap-y-3">
+    <div className="max-w-3xl mx-auto mb-16 border-t border-b border-gray-200 py-8 bg-gray-50/50 px-6 rounded-sm">
+      <span className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-4 font-sans">Table of Contents</span>
+      <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
         {sections.map((sec, idx) => (
-          <li key={sec.id} className="flex items-center gap-2">
-            <span className="text-slate-300 text-xs font-mono">0{idx + 1}</span>
+          <li key={sec.id} className="flex items-start gap-3">
+            <span className="text-red-700 text-xs font-mono font-bold mt-1">0{idx + 1}</span>
             <a 
               href={`#${sec.id}`}
-              className="font-serif text-lg text-slate-700 hover:text-red-700 hover:underline decoration-1 underline-offset-4 transition-colors"
+              className="font-serif text-lg text-slate-700 hover:text-red-700 hover:underline decoration-1 underline-offset-4 transition-colors leading-snug"
             >
               {sec.title}
             </a>
@@ -84,24 +91,27 @@ const ArticleSection: React.FC<{
   content: string; 
   sourceUrl?: string; 
 }> = ({ id, title, content, sourceUrl }) => (
-  <section id={id} className="mb-16 scroll-mt-24 max-w-3xl mx-auto">
+  <section id={id} className="mb-14 scroll-mt-24 max-w-3xl mx-auto">
     {title && (
-      <h2 className="font-serif text-3xl font-bold text-slate-900 mb-6 border-l-4 border-slate-900 pl-4 leading-tight">
+      <h2 className="font-serif text-3xl font-bold text-slate-900 mb-6 mt-8 leading-tight">
         {title}
       </h2>
     )}
     
-    <div className="prose prose-lg prose-slate max-w-none 
-                    prose-p:text-slate-800 prose-p:font-sans prose-p:leading-[1.8] prose-p:mb-6
+    {/* Typography enhancements: font-serif, leading-relaxed, better colors */}
+    <div className="prose prose-lg max-w-none 
+                    text-gray-800
+                    prose-p:font-serif prose-p:leading-8 prose-p:mb-6 prose-p:text-lg
                     prose-a:text-red-700 prose-a:no-underline hover:prose-a:underline
                     prose-headings:font-serif prose-headings:font-bold prose-headings:text-slate-900
                     prose-strong:font-bold prose-strong:text-slate-900
-                    prose-blockquote:border-l-2 prose-blockquote:border-red-700 prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-slate-600">
+                    prose-blockquote:border-l-4 prose-blockquote:border-red-700 prose-blockquote:pl-6 prose-blockquote:py-2 prose-blockquote:italic prose-blockquote:text-slate-600 prose-blockquote:bg-gray-50
+                    prose-li:font-serif prose-li:text-gray-800">
       <ReactMarkdown 
         remarkPlugins={[remarkGfm]}
         components={{
           p({ node, children, className, ...props }) {
-            // Ghép text tất cả children lại để kiểm tra
+            // Flatten children to check text content
             const textContent = (Array.isArray(children)
               ? children.map((c) => (typeof c === "string" ? c : "")).join("")
               : typeof children === "string"
@@ -109,13 +119,14 @@ const ArticleSection: React.FC<{
                 : ""
             ).trim();
 
-            const isSource = textContent.toLowerCase().startsWith('nguồn:') || 
-                             textContent.toLowerCase().startsWith('nguồn gốc:');
+            const lowerText = textContent.toLowerCase();
+            const isSource = lowerText.startsWith('nguồn:') || 
+                             lowerText.startsWith('nguồn gốc:');
             
-            // Style riêng cho dòng nguồn
-            // Dùng !important để override style mặc định của typography plugin (prose)
+            // Style specifically for "Nguồn" line
+            // Blue text, italic, small, with a slight background for emphasis
             const finalClassName = isSource 
-               ? `${className || ''} !text-xs !text-sky-700 italic font-medium mt-1` 
+               ? `${className || ''} !text-sm !text-blue-700 font-sans italic font-medium mt-2 mb-2 px-3 py-1 bg-blue-50/50 rounded inline-block border-l-2 border-blue-400` 
                : className;
 
             return (
@@ -131,14 +142,14 @@ const ArticleSection: React.FC<{
     </div>
 
     {sourceUrl && (
-      <div className="mt-8 pt-4 border-t border-slate-100 flex justify-end">
+      <div className="mt-6 flex justify-start">
         <a 
           href={sourceUrl}
           target="_blank" 
           rel="noreferrer"
-          className="group inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors"
+          className="group inline-flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-blue-700 transition-colors border border-gray-200 px-3 py-1.5 rounded-sm hover:border-blue-200"
         >
-          Source Reference <ArrowUpRight className="w-3 h-3 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+          Reference Link <ArrowUpRight className="w-3 h-3 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
         </a>
       </div>
     )}
@@ -180,19 +191,20 @@ export const NewsDetailPage: React.FC = () => {
     return rawChunks.map((chunk, index) => {
       // 1. Identify Title
       const titleMatch = chunk.match(/^##\s+(.*)$/m);
-      const title = titleMatch ? titleMatch[1].trim() : (index === 0 ? undefined : `Section ${index}`);
+      
+      // Clean title removes {#anchor-tags}
+      const rawTitle = titleMatch ? titleMatch[1].trim() : (index === 0 ? undefined : `Section ${index}`);
+      const title = cleanHeading(rawTitle);
       
       // 2. Remove the H2 line from content to avoid double rendering
       const content = chunk.replace(/^##\s+.*$/m, '').trim();
 
       // 3. Map a source from the `sources` array if it exists at this index
-      // If index 0 is Intro (no H2), it gets sources[0].
-      // This is a rough 1-to-1 mapping as per "source at end of each section" request
       const sectionSource = newsItem.sources?.[index];
 
       return {
         id: `section-${index}`,
-        title, // Intro chunk (index 0) usually has no title unless it started with ##
+        title, 
         content,
         sourceUrl: sectionSource
       };
@@ -220,10 +232,10 @@ export const NewsDetailPage: React.FC = () => {
     );
   }
 
-  if (!newsItem) return <div className="text-center py-20">Article not found</div>;
+  if (!newsItem) return <div className="text-center py-20 font-serif text-xl text-gray-500">Article not found</div>;
 
   return (
-    <div className="min-h-screen bg-white font-sans selection:bg-red-100 selection:text-red-900">
+    <div className="min-h-screen bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
       <Header />
 
       <main className="py-12 md:py-20 px-4 md:px-6">
@@ -242,7 +254,7 @@ export const NewsDetailPage: React.FC = () => {
         <TableOfContents sections={tocItems} />
 
         {/* 4. Render Sections */}
-        <article className="mb-20">
+        <article className="mb-24">
           {articleSections.map((section) => (
             <ArticleSection 
               key={section.id}
@@ -250,11 +262,11 @@ export const NewsDetailPage: React.FC = () => {
             />
           ))}
 
-          {/* Fallback: If strict sources array didn't cover everything or we want to ensure the main source is visible */}
+          {/* Fallback: If strict sources array didn't cover everything */}
           {(!newsItem.sources || newsItem.sources.length === 0) && newsItem.sourceUrl && (
-             <div className="max-w-3xl mx-auto pt-8 border-t border-slate-200">
-                 <p className="text-sm text-slate-500">
-                     Original Source: <a href={newsItem.sourceUrl} target="_blank" rel="noreferrer" className="text-red-700 hover:underline">{newsItem.sourceName || newsItem.sourceUrl}</a>
+             <div className="max-w-3xl mx-auto pt-8 border-t border-slate-200 mt-12">
+                 <p className="text-sm text-slate-500 font-sans">
+                     Original Source: <a href={newsItem.sourceUrl} target="_blank" rel="noreferrer" className="text-blue-700 hover:underline font-bold">{newsItem.sourceName || newsItem.sourceUrl}</a>
                  </p>
              </div>
           )}
@@ -262,11 +274,12 @@ export const NewsDetailPage: React.FC = () => {
 
         {/* 5. Tags */}
         {newsItem.tags && newsItem.tags.length > 0 && (
-          <div className="max-w-3xl mx-auto text-center">
+          <div className="max-w-3xl mx-auto text-center border-t border-gray-100 pt-10">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 font-sans">Filed Under</h4>
             <div className="flex flex-wrap justify-center gap-3">
               {newsItem.tags.map(tag => (
-                <span key={tag} className="px-4 py-1.5 border border-slate-200 rounded-full text-xs font-bold uppercase tracking-wider text-slate-500 hover:border-slate-400 hover:text-slate-900 transition-colors cursor-default">
-                  #{tag}
+                <span key={tag} className="px-4 py-1.5 bg-gray-50 border border-gray-200 rounded-sm text-xs font-bold uppercase tracking-wider text-gray-600 hover:bg-black hover:text-white hover:border-black transition-colors cursor-pointer font-sans">
+                  {tag}
                 </span>
               ))}
             </div>

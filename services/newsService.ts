@@ -37,13 +37,13 @@ export const NewsService = {
   getAllNews: async (limit?: number): Promise<NewsItem[]> => {
     // Select all columns
     // Sort logic: 
-    // 1. Date descending (newest printed date first). nullsFirst: false ensures items WITH dates appear at top.
-    // 2. Created_at descending (newest database entry first) to break ties.
+    // 1. Created_at descending (newest database entry first) - PRIORITY 1
+    // 2. Date descending (newest printed date second)
     let query = supabase
       .from('news')
       .select('*')
-      .order('date', { ascending: false, nullsFirst: false }) 
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .order('date', { ascending: false, nullsFirst: false });
 
     // Apply limit if provided
     if (limit) {
@@ -71,8 +71,8 @@ export const NewsService = {
     let query = supabase
       .from('news')
       .select('*')
-      .order('date', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .order('date', { ascending: false, nullsFirst: false });
 
     // If category is NOT 'ai', filter strictly.
     // If category IS 'ai', we return everything because the user stated "all articles are about AI".
@@ -121,8 +121,8 @@ export const NewsService = {
       .from('news')
       .select('*')
       .or(`title.ilike.%${queryStr}%,summary.ilike.%${queryStr}%`)
-      .order('date', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .order('date', { ascending: false, nullsFirst: false });
 
     if (error) {
       console.error('Error searching news:', error);
