@@ -1,0 +1,2 @@
+-- No database schema changes required for styling update v13.
+-- This update focuses on frontend typography (Serif fonts) and layout components (Article Header Briefing Box).
