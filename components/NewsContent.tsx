@@ -7,6 +7,34 @@ interface NewsContentProps {
   content: string;
 }
 
+// Utility to extract raw text from React Children
+const extractText = (children: any): string => {
+    if (!children) return '';
+    if (typeof children === 'string') return children;
+    if (typeof children === 'number') return children.toString();
+    if (Array.isArray(children)) return children.map(extractText).join('');
+    if (children.props && children.props.children) return extractText(children.props.children);
+    return '';
+};
+
+// Utility to parse text and extract custom ID: "Heading {#my-id}" -> { text: "Heading", id: "my-id" }
+const parseHeading = (rawText: string) => {
+    let text = rawText;
+    let id = '';
+    const idMatch = rawText.match(/{#([^}]+)}/);
+    if (idMatch) {
+        id = idMatch[1];
+        text = text.replace(/{#([^}]+)}/, '').trim();
+    } else {
+        // Fallback slugify
+        id = text.toLowerCase()
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/[^\w\-\u00C0-\u1EF9]/g, '');
+    }
+    return { id, text };
+};
+
 export const NewsContent: React.FC<NewsContentProps> = ({ content }) => {
   return (
     <div className="news-content font-serif text-gray-800">
@@ -23,19 +51,26 @@ export const NewsContent: React.FC<NewsContentProps> = ({ content }) => {
         components={{
           // Styled H2
           h2: ({ node, children, ...props }) => {
-            const id = children?.toString().toLowerCase().replace(/[^\w]+/g, '-') || '';
+            const rawText = extractText(children);
+            const { id, text } = parseHeading(rawText);
+            
             return (
               <h2 id={id} className="scroll-mt-24 text-2xl md:text-3xl font-bold mt-12 mb-6 text-black border-b border-gray-200 pb-2" {...props}>
-                {children}
+                {text}
               </h2>
             );
           },
           // Styled H3
-          h3: ({ node, children, ...props }) => (
-             <h3 className="text-xl md:text-2xl font-bold mt-10 mb-4 text-gray-800" {...props}>
-               {children}
-             </h3>
-          ),
+          h3: ({ node, children, ...props }) => {
+             const rawText = extractText(children);
+             const { id, text } = parseHeading(rawText);
+
+             return (
+                <h3 id={id} className="scroll-mt-24 text-xl md:text-2xl font-bold mt-10 mb-4 text-gray-800" {...props}>
+                  {text}
+                </h3>
+             );
+          },
           // Styled Blockquote
           blockquote: ({ node, children, ...props }) => (
             <div className="my-8 pl-6 border-l-4 border-accent italic text-xl text-gray-700 bg-gray-50 py-4 pr-4 rounded-r-lg">
@@ -76,7 +111,8 @@ export const NewsContent: React.FC<NewsContentProps> = ({ content }) => {
           a: ({ node, href, children, ...props }) => {
             const isExternal = href?.startsWith('http');
             // Check if the text is exactly "Source" or "Nguồn" for special styling
-            const isSourceLink = children?.toString().toLowerCase().includes('nguồn') || children?.toString().toLowerCase().includes('source');
+            const childText = extractText(children).toLowerCase();
+            const isSourceLink = childText.includes('nguồn') || childText.includes('source');
             
             if (isSourceLink) {
                 return (

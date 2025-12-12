@@ -37,7 +37,7 @@ export const ArticleHeader: React.FC<ArticleHeaderProps> = ({ news, readTime }) 
         {news.title}
       </h1>
 
-      {/* Dashed Box: Media & Summary ("The Briefing") */}
+      {/* Dashed Box: Media & Summary */}
       {(news.imageUrl || news.summary) && (
         <div className="border-2 border-dashed border-primary/40 rounded-xl p-2 md:p-3 mb-10 bg-white">
             
@@ -61,7 +61,6 @@ export const ArticleHeader: React.FC<ArticleHeaderProps> = ({ news, readTime }) 
             {news.summary && (
                 <div className="bg-amber-50/80 p-6 rounded-lg border border-amber-100">
                      <p className="text-lg md:text-xl font-serif text-gray-800 leading-relaxed italic">
-                        <span className="font-bold text-primary not-italic block text-xs font-sans uppercase tracking-widest mb-2">The Briefing</span>
                         {news.summary}
                      </p>
                 </div>
@@ -69,7 +68,7 @@ export const ArticleHeader: React.FC<ArticleHeaderProps> = ({ news, readTime }) 
         </div>
       )}
 
-      {/* Author Line (if needed here, though Footer has it too, usually nice to have byline up top) */}
+      {/* Author Line */}
       <div className="flex items-center gap-3 font-sans text-sm text-gray-600 mb-8">
           <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
               <User className="w-4 h-4" />

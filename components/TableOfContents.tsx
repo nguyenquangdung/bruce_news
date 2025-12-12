@@ -21,11 +21,26 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({ markdown }) =>
     const extracted: TocItem[] = [];
     
     lines.forEach(line => {
+      // Match H2 (##) and optionally H3 (###) if needed, currently focusing on H2
       const match = line.match(/^##\s+(.*)$/);
       if (match) {
-        const text = match[1].trim();
-        // Simple slugify matching the renderer
-        const id = text.toLowerCase().replace(/[^\w]+/g, '-');
+        let text = match[1].trim();
+        let id = '';
+
+        // Check for custom ID syntax like: ## Heading Text {#custom-id}
+        const idMatch = text.match(/{#([^}]+)}/);
+        
+        if (idMatch) {
+            id = idMatch[1];
+            text = text.replace(/{#([^}]+)}/, '').trim();
+        } else {
+            // Fallback: Slugify text (replace spaces with hyphens, keep alphanumeric and Vietnamese chars)
+            id = text.toLowerCase()
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/[^\w\-\u00C0-\u1EF9]/g, '');
+        }
+        
         extracted.push({ id, text });
       }
     });

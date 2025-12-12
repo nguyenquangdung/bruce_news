@@ -1,0 +1,4 @@
+-- Frontend update only:
+-- 1. TableOfContents now strips {#id} syntax from labels.
+-- 2. NewsContent heading renderers now strip {#id} syntax from display.
+-- 3. ArticleHeader summary box simplified (removed 'The Briefing' label).
